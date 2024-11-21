@@ -5,11 +5,16 @@ font['header2'] = (font['family'], 16)
 font['header3'] = (font['family'], 12)
 
 bg = {}
-bg['i'] = "#a9deef"
-bg['ni'] = "#f2dca7"
-bg['u'] = "#cdeca6"
-bg['nu'] = "#f3c4b9"
-bg['ui'] = "#cbe9f2"
-bg['uni'] = "#def0c8"
-bg['nui'] = "#f1e7cd"
-bg['nuni'] = "#f4e1dd"
+bg['header2'] = "#e1e1e1"
+bg['i'] = "#7c8a8e"
+bg['ni'] = bg['header2']
+bg['u'] = "#7c8a8e"
+bg['nu'] = bg['header2']
+bg['iu'] = "#def0c8"
+bg['inu'] = "#cbe9f2"
+bg['niu'] = "#f1e7cd"
+bg['ninu'] = "#f4e1dd"
+
+fg = {}
+fg['i'] = "#ffffff"
+fg['u'] = "#ffffff"
