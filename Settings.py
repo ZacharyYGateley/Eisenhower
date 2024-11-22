@@ -1,10 +1,12 @@
 import tkinter as tk
+from tkinter import font
 import Styles as sty
 
 class Settings:
     """Eisenhower Matrix Settings."""
     def __init__(self, settings):
         self.font_size = settings['font_size'] if 'font_size' in settings else 12
+        self.set_font()
         self.notes_1 = settings['notes_1'] if 'notes_1' in settings else 'Notes 1'
         self.notes_2 = settings['notes_2'] if 'notes_2' in settings else 'Notes 2'
         self.notes_3 = settings['notes_3'] if 'notes_3' in settings else 'Notes 3'
@@ -20,6 +22,9 @@ class Settings:
         if hasattr(self, key):
             setattr(self, key, value)
 
+    def set_font(self):
+        self.font = font.Font(family=sty.font_mono(), size=self.font_size)
+
 class SettingsWindow:
     """Update Eisenhower Matrix Settings.
     
@@ -32,7 +37,7 @@ class SettingsWindow:
             settings = Settings()
         self.settings = settings
 
-        root = tk.Tk()
+        root = tk.Toplevel(self.parent.root)
         self.root = root
 
         root.title(parent.title)
@@ -103,6 +108,7 @@ class SettingsWindow:
     def save(self):
         """Update Settings object and pass it to parent. Close window."""
         self.settings.set('font_size', self.entryfs.get())
+        self.settings.set_font()
         self.settings.set('notes_1', self.entry1.get())
         self.settings.set('notes_2', self.entry2.get())
         self.settings.set('notes_3', self.entry3.get())
