@@ -1,11 +1,11 @@
-import tkinter as tk
-from tkinter import filedialog as fd
-from tkinter import font
-from tkinter import messagebox as mb
-from tkinter import scrolledtext as st
+import json
 from Settings import *
 import Styles as sty
-import json
+import sys
+import tkinter as tk
+from tkinter import filedialog as fd
+from tkinter import messagebox as mb
+from tkinter import scrolledtext as st
 
 open_instances = []
 root = None
@@ -34,6 +34,8 @@ class Eisenhower:
         self.saved = True
         # File location for saves
         self.file_location = file_location
+        # Tab width for text boxes
+        self.tab_width = self.settings.get('font').measure('  ')
 
         # 1x3 column grid
         # Column 1: Embedded 2x1 grid
@@ -104,8 +106,10 @@ class Eisenhower:
 
         label_0 = tk.Label(master, textvariable=label_0_text, font=sty.font['header2'], bg=sty.bg['header2'])
         field_0 = st.ScrolledText(master, width=25, font=self.settings.get('font'))
+        field_0.config(tabs=self.tab_width)
         label_1 = tk.Label(master, textvariable=label_1_text, font=sty.font['header2'], bg=sty.bg['header2'])
         field_1 = st.ScrolledText(master, width=25, height=10, font=self.settings.get('font'))
+        field_1.config(tabs=self.tab_width)
 
         label_0.grid(row=0, column=0, sticky="EW")
         field_0.grid(row=1, column=0, sticky="NSEW")
@@ -143,9 +147,13 @@ class Eisenhower:
         c20.grid(row=2, column=0, sticky="NSEW")
 
         important_urgent = st.ScrolledText(master, bg=sty.bg['iu'], font=self.settings.get('font'), width=50, height=20)
+        important_urgent.config(tabs=self.tab_width)
         important_not_urgent = st.ScrolledText(master, bg=sty.bg['inu'], font=self.settings.get('font'), width=50, height=20)
+        important_not_urgent.config(tabs=self.tab_width)
         not_important_urgent = st.ScrolledText(master, bg=sty.bg['niu'], font=self.settings.get('font'), width=50, height=20)
+        not_important_urgent.config(tabs=self.tab_width)
         not_important_not_urgent = st.ScrolledText(master, bg=sty.bg['ninu'], font=self.settings.get('font'), width=50, height=20)
+        not_important_not_urgent.config(tabs=self.tab_width)
 
         important_urgent.grid(row=1, column=1, sticky="NSEW")
         important_not_urgent.grid(row=1, column=2, sticky="NSEW")
@@ -175,8 +183,10 @@ class Eisenhower:
 
         label_0 = tk.Label(master, textvariable=label_0_text, font=sty.font['header2'], bg=sty.bg['header2'])
         field_0 = st.ScrolledText(master, width=25, height=10, font=self.settings.get('font'))
+        field_0.config(tabs=self.tab_width)
         label_1 = tk.Label(master, textvariable=label_1_text, font=sty.font['header2'], bg=sty.bg['header2'])
         field_1 = st.ScrolledText(master, width=25, font=self.settings.get('font'))
+        field_1.config(tabs=self.tab_width)
 
         label_0.grid(row=0, column=0, sticky="EW")
         field_0.grid(row=1, column=0, sticky="NSEW")
@@ -332,6 +342,9 @@ class Eisenhower:
 
 def main(file_location=""): 
     """Open new Eisenhower instance."""
+    if len(sys.argv) > 1:
+        file_location = sys.argv[1]
+
     root = tk.Tk()
     Eisenhower(root, file_location=file_location)
     root.mainloop()
