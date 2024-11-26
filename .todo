@@ -1,7 +1,9 @@
-Move Eisenhower self.title to self.settings['title']. Add to settings form. Create .set_title method. Include .set_title in .open method.
 Build Readme
+
+Settings:
+* self.title - Create .set_title method. Include .set_title in .open method.
+* self.tab_width
+* type [enter] to save/update
+
 Don't allow multiple instances of same save at once (open. new. open)
-saved flag
-File --> New: not monospace font? also no custom notes titles?
-Add tab width to settings
-Settings: [enter] to save
+Close option in menu?

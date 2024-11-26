@@ -8,13 +8,12 @@ from tkinter import messagebox as mb
 from tkinter import scrolledtext as st
 
 open_instances = []
-root = None
-g_mono_font = None
 
 class Eisenhower:
     """Master Eisenhower Matrix."""
     def __init__(self, root, file_location=""):
         self.root = root
+        self.window = tk.Toplevel()
         self.settings_window = None
         # Volatile matrix settings
         self.settings = Settings({
@@ -37,35 +36,43 @@ class Eisenhower:
         # Tab width for text boxes
         self.tab_width = self.settings.get('font').measure('  ')
 
+        # File menu
+        self.build_menu()
+
+        # Title and status bar
+        self.title = 'Eisenhower To-Do Matrix'
+        self.window.title(self.title)
+        self.titlevar = tk.StringVar()
+        self.titlevar.set(self.title)
+        title = tk.Label(self.window, textvariable=self.titlevar)
+        title.config(font=sty.font['header1'])
+        title.grid(row=0, column=1)
+
+        self.status_variable = tk.StringVar()
+        self.status_timeout = None
+        status = tk.Label(self.window, textvar=self.status_variable, fg="red")
+        status.grid(row=0, column=0, sticky="W")
+
         # 1x3 column grid
         # Column 1: Embedded 2x1 grid
         # Column 2: Embedded 3x3 grid
         # Column 3: Embedded 2x1 grid
-
-        self.title = 'Eisenhower To-Do Matrix'
-
-        root.title(self.title)
-        title = tk.Label(root, text=self.title)
-        title.config(font=sty.font['header1'])
-        title.grid(row=0, column=0, columnspan=3)
-
-        self.build_menu()
-
-        left = tk.Frame(root)
+        left = tk.Frame(self.window)
         left.grid(column=0, row=1, sticky="NSEW")
-        center = tk.Frame(root, padx=10)
+        center = tk.Frame(self.window, padx=10)
         center.grid(column=1, row=1, sticky="NSEW")
-        right = tk.Frame(root)
+        right = tk.Frame(self.window)
         right.grid(column=2, row=1, sticky="NSEW")
 
+        # Configure grid
         # Title row does not expand
-        root.rowconfigure(index=1, weight=1)
+        self.window.rowconfigure(index=1, weight=1)
         # Only matrix column expands
-        root.columnconfigure(index=1, weight=1)
+        self.window.columnconfigure(index=1, weight=1)
 
-        (label_0, field_0, label_1, field_1) = self.build_column(left, True, 'notes_1', 'notes_2')
-        self.build_center(center)
-        (label_2, field_2, label_3, field_3) = self.build_column(right, False, 'notes_3', 'notes_4')
+        (label_0, field_0, label_1, field_1) = self.build_notes(left, True, 'notes_1', 'notes_2')
+        self.matrix = self.build_center(center)
+        (label_2, field_2, label_3, field_3) = self.build_notes(right, False, 'notes_3', 'notes_4')
 
         self.notes_label = [label_0, label_1, label_2, label_3]
         self.notes_text = [field_0, field_1, field_2, field_3]
@@ -77,63 +84,17 @@ class Eisenhower:
         # Keep track of all open instances
         open_instances.append(self)
 
-        # Make sure self.root is erased on window destroy
-        root.protocol("WM_DELETE_WINDOW", self.close)
-    
-    def build_menu(self):
-        """Build tkinter menu of main window. Used only during __init__."""
-        menubar = tk.Menu(self.root) 
-  
-        # Adding File Menu and commands 
-        file = tk.Menu(menubar, tearoff = 0) 
-        menubar.add_cascade(label = 'File', menu = file) 
-        file.add_command(label = 'New Matrix', command = self.new)
-        file.add_command(label = 'Open Matrix', command = self.open)
-        file.add_command(label = 'Save', command = self.save)
-        file.add_command(label = 'Save As', command = self.saveas)
-        file.add_separator() 
-        file.add_command(label = 'Exit', command = self.close)
+        # Make sure self.window is erased on window destroy
+        self.window.protocol("WM_DELETE_WINDOW", self.close)
 
-        edit = tk.Menu(menubar, tearoff = 0)
-        menubar.add_cascade(label = 'Edit', menu=edit)
-        edit.add_command(label = 'Matrix Settings', command = self.settings_open)
-
-        self.root.config(menu = menubar) 
-
-    def build_column(self, master, top_grow, label_0_set, label_1_set):
-        """Build tkinter left column of main window. Used only during __init__."""
-
-        # Titles as string variables
-        label_0_text = tk.StringVar()
-        label_0_text.set(self.settings.get(label_0_set))
-        label_1_text = tk.StringVar()
-        label_1_text.set(self.settings.get(label_1_set))
-
-        # Build widgets
-        label_0 = tk.Label(master, textvariable=label_0_text, font=sty.font['header2'], bg=sty.bg['header2'])
-        (frame_0, field_0) = self.build_scrolledtext(master, width=25, font=self.settings.get('font'))
-        label_1 = tk.Label(master, textvariable=label_1_text, font=sty.font['header2'], bg=sty.bg['header2'])
-        (frame_1, field_1) = self.build_scrolledtext(master, width=25, font=self.settings.get('font'))
-
-        # Configure
-        field_0.config(tabs=self.tab_width)
-        field_1.config(tabs=self.tab_width)
-
-        # Add to window
-        label_0.grid(row=0, column=0, sticky="EW")
-        frame_0.grid(row=1, column=0, sticky="NSEW")
-        label_1.grid(row=2, column=0, sticky="EW")
-        frame_1.grid(row=3, column=0, sticky="NSEW")
-        
-        # Allow bottom text box to grow/shrink
-        if top_grow:
-            master.rowconfigure(index=1, weight=1)
-            field_1.configure(height=10)
-        else:
-            master.rowconfigure(index=3, weight=1)
-            field_0.configure(height=10)
-        
-        return (label_0_text, field_0, label_1_text, field_1)
+        # Bind CTRL+S
+        def key_press(event):
+            key = event.char
+            if ord(key) == 19:
+                self.save()
+            else:
+                self.status_unsaved()
+        self.window.bind('<KeyPress>', key_press)
 
     def build_center(self, master):
         """Build tkinter central column of main window. Used only during __init__."""
@@ -172,19 +133,68 @@ class Eisenhower:
         frame_21.grid(row=2, column=1, sticky="NSEW")
         frame_22.grid(row=2, column=2, sticky="NSEW")
 
-        # Save for dynamic access
-        self.matrix[0] = important_urgent
-        self.matrix[1] = not_important_urgent
-        self.matrix[2] = important_not_urgent
-        self.matrix[3] = not_important_not_urgent
-
         # Expand text boxes only
         master.columnconfigure(index=1, weight=1, uniform="column")
         master.columnconfigure(index=2, weight=1, uniform="column")
         master.rowconfigure(index=1, weight=1, uniform="row")
         master.rowconfigure(index=2, weight=1, uniform="row")
 
-        pass
+        return (important_urgent, not_important_urgent, important_not_urgent, not_important_not_urgent)
+
+    def build_menu(self):
+        """Build tkinter menu of main window. Used only during __init__."""
+        menubar = tk.Menu(self.window) 
+  
+        # Adding File Menu and commands 
+        file = tk.Menu(menubar, tearoff = 0) 
+        menubar.add_cascade(label = 'File', menu = file) 
+        file.add_command(label = 'New Matrix', command = self.new)
+        file.add_command(label = 'Open Matrix', command = self.open)
+        file.add_command(label = 'Save', command = self.save)
+        file.add_command(label = 'Save As', command = self.saveas)
+        file.add_separator() 
+        file.add_command(label = 'Exit', command = self.close)
+
+        edit = tk.Menu(menubar, tearoff = 0)
+        menubar.add_cascade(label = 'Edit', menu=edit)
+        edit.add_command(label = 'Matrix Settings', command = self.settings_open)
+
+        self.window.config(menu = menubar) 
+
+    def build_notes(self, master, top_grow, label_0_set, label_1_set):
+        """Build tkinter left column of main window. Used only during __init__."""
+
+        # Titles as string variables
+        label_0_text = tk.StringVar()
+        label_0_text.set(self.settings.get(label_0_set))
+        label_1_text = tk.StringVar()
+        label_1_text.set(self.settings.get(label_1_set))
+
+        # Build widgets
+        label_0 = tk.Label(master, textvariable=label_0_text, font=sty.font['header2'], bg=sty.bg['header2'])
+        (frame_0, field_0) = self.build_scrolledtext(master, width=25, font=self.settings.get('font'))
+        label_1 = tk.Label(master, textvariable=label_1_text, font=sty.font['header2'], bg=sty.bg['header2'])
+        (frame_1, field_1) = self.build_scrolledtext(master, width=25, font=self.settings.get('font'))
+
+        # Configure
+        field_0.config(tabs=self.tab_width)
+        field_1.config(tabs=self.tab_width)
+
+        # Add to window
+        label_0.grid(row=0, column=0, sticky="EW")
+        frame_0.grid(row=1, column=0, sticky="NSEW")
+        label_1.grid(row=2, column=0, sticky="EW")
+        frame_1.grid(row=3, column=0, sticky="NSEW")
+        
+        # Allow bottom text box to grow/shrink
+        if top_grow:
+            master.rowconfigure(index=1, weight=1)
+            field_1.configure(height=10)
+        else:
+            master.rowconfigure(index=3, weight=1)
+            field_0.configure(height=10)
+        
+        return (label_0_text, field_0, label_1_text, field_1)
     
     def build_scrolledtext(self, master, **kwargs):
         frame = tk.Frame(master)
@@ -202,15 +212,18 @@ class Eisenhower:
 
     def close(self):
         self.settings_close()
-        self.root.destroy()
+        self.window.destroy()
         open_instances.remove(self)
 
+        if len(open_instances) == 0:
+            self.root.destroy()
+
     def focus(self):
-        self.root.focus_force()
+        self.window.focus_force()
 
     def new(self):
         """Open new Eisenhower instance."""
-        main()
+        main(self.root)
     
     def open(self, file_location=""):
         # Browse for file
@@ -243,7 +256,7 @@ class Eisenhower:
         
         # Do not overwrite current matrix. Open a new instance if there are unsaved changes.
         if not overwrite and self.file_location != "" and self.file_location != file_location:
-            main(file_location=file_location)
+            main(self.root, file_location=file_location)
         self.file_location = file_location
 
         # JSON parses file
@@ -298,6 +311,8 @@ class Eisenhower:
         # Save to file
         with open(self.file_location, 'w') as file:
             json.dump(data, file)
+        
+        self.status_saved()
 
     def saveas(self):
         file_location = fd.asksaveasfilename(
@@ -306,7 +321,7 @@ class Eisenhower:
             filetypes = [('Eisenhower Files', '*.ei*')],
             defaultextension="ei"
         )
-        if file_location is not None:
+        if file_location is not None and file_location != "":
             self.file_location = file_location
             self.save()
         
@@ -339,14 +354,21 @@ class Eisenhower:
         
         self.settings_repaint()
 
-def main(file_location=""): 
+    def status_unsaved(self):
+        self.status_variable.set("CHANGES NOT SAVED")
+    
+    def status_saved(self):
+        self.status_variable.set("")
+
+def main(root, file_location=""): 
     """Open new Eisenhower instance."""
     if len(sys.argv) > 1:
         file_location = sys.argv[1]
 
-    root = tk.Tk()
     Eisenhower(root, file_location=file_location)
-    root.mainloop()
 
 if __name__ == '__main__':
-    main()
+    root = tk.Tk()
+    root.withdraw()
+    main(root)
+    root.mainloop()
