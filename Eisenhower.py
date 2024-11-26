@@ -63,9 +63,12 @@ class Eisenhower:
         # Only matrix column expands
         root.columnconfigure(index=1, weight=1)
 
-        self.build_left(left)
+        (label_0, field_0, label_1, field_1) = self.build_column(left, True, 'notes_1', 'notes_2')
         self.build_center(center)
-        self.build_right(right)
+        (label_2, field_2, label_3, field_3) = self.build_column(right, False, 'notes_3', 'notes_4')
+
+        self.notes_label = [label_0, label_1, label_2, label_3]
+        self.notes_text = [field_0, field_1, field_2, field_3]
 
         # Attempt to open file
         if self.file_location != "":
@@ -97,32 +100,40 @@ class Eisenhower:
 
         self.root.config(menu = menubar) 
 
-    def build_left(self, master):
+    def build_column(self, master, top_grow, label_0_set, label_1_set):
         """Build tkinter left column of main window. Used only during __init__."""
-        label_0_text = tk.StringVar()
-        label_0_text.set(self.settings.get('notes_1'))
-        label_1_text = tk.StringVar()
-        label_1_text.set(self.settings.get('notes_2'))
 
+        # Titles as string variables
+        label_0_text = tk.StringVar()
+        label_0_text.set(self.settings.get(label_0_set))
+        label_1_text = tk.StringVar()
+        label_1_text.set(self.settings.get(label_1_set))
+
+        # Build widgets
         label_0 = tk.Label(master, textvariable=label_0_text, font=sty.font['header2'], bg=sty.bg['header2'])
-        field_0 = st.ScrolledText(master, width=25, font=self.settings.get('font'))
-        field_0.config(tabs=self.tab_width)
+        (frame_0, field_0) = self.build_scrolledtext(master, width=25, font=self.settings.get('font'))
         label_1 = tk.Label(master, textvariable=label_1_text, font=sty.font['header2'], bg=sty.bg['header2'])
-        field_1 = st.ScrolledText(master, width=25, height=10, font=self.settings.get('font'))
+        (frame_1, field_1) = self.build_scrolledtext(master, width=25, font=self.settings.get('font'))
+
+        # Configure
+        field_0.config(tabs=self.tab_width)
         field_1.config(tabs=self.tab_width)
 
+        # Add to window
         label_0.grid(row=0, column=0, sticky="EW")
-        field_0.grid(row=1, column=0, sticky="NSEW")
+        frame_0.grid(row=1, column=0, sticky="NSEW")
         label_1.grid(row=2, column=0, sticky="EW")
-        field_1.grid(row=3, column=0, sticky="NSEW")
-
-        # Save for dynamic access
-        self.notes_label[0] = label_0_text
-        self.notes_label[1] = label_1_text
-        self.notes_text[0] = field_0
-        self.notes_text[1] = field_1
+        frame_1.grid(row=3, column=0, sticky="NSEW")
         
-        master.rowconfigure(index=1, weight=1)
+        # Allow bottom text box to grow/shrink
+        if top_grow:
+            master.rowconfigure(index=1, weight=1)
+            field_1.configure(height=10)
+        else:
+            master.rowconfigure(index=3, weight=1)
+            field_0.configure(height=10)
+        
+        return (label_0_text, field_0, label_1_text, field_1)
 
     def build_center(self, master):
         """Build tkinter central column of main window. Used only during __init__."""
@@ -146,19 +157,20 @@ class Eisenhower:
         c10.grid(row=1, column=0, sticky="NSEW")
         c20.grid(row=2, column=0, sticky="NSEW")
 
-        important_urgent = st.ScrolledText(master, bg=sty.bg['iu'], font=self.settings.get('font'), width=50, height=20)
+        (frame_11, important_urgent) = self.build_scrolledtext(master, bg=sty.bg['iu'], font=self.settings.get('font'), width=50, height=20)
+        (frame_12, important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['inu'], font=self.settings.get('font'), width=50, height=20)
+        (frame_21, not_important_urgent) = self.build_scrolledtext(master, bg=sty.bg['niu'], font=self.settings.get('font'), width=50, height=20)
+        (frame_22, not_important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['ninu'], font=self.settings.get('font'), width=50, height=20)
+        
         important_urgent.config(tabs=self.tab_width)
-        important_not_urgent = st.ScrolledText(master, bg=sty.bg['inu'], font=self.settings.get('font'), width=50, height=20)
         important_not_urgent.config(tabs=self.tab_width)
-        not_important_urgent = st.ScrolledText(master, bg=sty.bg['niu'], font=self.settings.get('font'), width=50, height=20)
         not_important_urgent.config(tabs=self.tab_width)
-        not_important_not_urgent = st.ScrolledText(master, bg=sty.bg['ninu'], font=self.settings.get('font'), width=50, height=20)
         not_important_not_urgent.config(tabs=self.tab_width)
 
-        important_urgent.grid(row=1, column=1, sticky="NSEW")
-        important_not_urgent.grid(row=1, column=2, sticky="NSEW")
-        not_important_urgent.grid(row=2, column=1, sticky="NSEW")
-        not_important_not_urgent.grid(row=2, column=2, sticky="NSEW")
+        frame_11.grid(row=1, column=1, sticky="NSEW")
+        frame_12.grid(row=1, column=2, sticky="NSEW")
+        frame_21.grid(row=2, column=1, sticky="NSEW")
+        frame_22.grid(row=2, column=2, sticky="NSEW")
 
         # Save for dynamic access
         self.matrix[0] = important_urgent
@@ -173,33 +185,20 @@ class Eisenhower:
         master.rowconfigure(index=2, weight=1, uniform="row")
 
         pass
+    
+    def build_scrolledtext(self, master, **kwargs):
+        frame = tk.Frame(master)
+        field = tk.Text(frame, kwargs, wrap="none")
+        field_v = tk.Scrollbar(frame, orient="vertical", command=field.yview)
+        field_h = tk.Scrollbar(frame, orient="horizontal", command=field.xview)
+        field.grid(row=0, column=0, sticky="NSEW")
+        field_v.grid(row=0, column=1, sticky="NS")
+        field_h.grid(row=1, column=0, sticky="EW")
+        field.configure(yscrollcommand=field_v.set, xscrollcommand=field_h.set)
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(0, weight=1)
 
-    def build_right(self, master):
-        """Build tkinter right column of main window. Used only during __init__."""
-        label_0_text = tk.StringVar()
-        label_0_text.set(self.settings.get('notes_3'))
-        label_1_text = tk.StringVar()
-        label_1_text.set(self.settings.get('notes_4'))
-
-        label_0 = tk.Label(master, textvariable=label_0_text, font=sty.font['header2'], bg=sty.bg['header2'])
-        field_0 = st.ScrolledText(master, width=25, height=10, font=self.settings.get('font'))
-        field_0.config(tabs=self.tab_width)
-        label_1 = tk.Label(master, textvariable=label_1_text, font=sty.font['header2'], bg=sty.bg['header2'])
-        field_1 = st.ScrolledText(master, width=25, font=self.settings.get('font'))
-        field_1.config(tabs=self.tab_width)
-
-        label_0.grid(row=0, column=0, sticky="EW")
-        field_0.grid(row=1, column=0, sticky="NSEW")
-        label_1.grid(row=2, column=0, sticky="EW")
-        field_1.grid(row=3, column=0, sticky="NSEW")
-
-        # Save for dynamic access
-        self.notes_label[2] = label_0_text
-        self.notes_label[3] = label_1_text
-        self.notes_text[2] = field_0
-        self.notes_text[3] = field_1
-
-        master.rowconfigure(index=3, weight=1)
+        return (frame, field)
 
     def close(self):
         self.settings_close()
