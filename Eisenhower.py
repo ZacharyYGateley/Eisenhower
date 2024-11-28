@@ -21,7 +21,8 @@ class Eisenhower:
             'notes_1': 'Notes 1',
             'notes_2': 'Notes 2',
             'notes_3': 'Notes 3',
-            'notes_4': 'Notes 4'
+            'notes_4': 'Notes 4',
+            'title': 'Eisenhower To-Do Matrix'
         })
         # Perimeter note labels (tkinter label objects)
         self.notes_label = [ None, None, None, None ]
@@ -40,7 +41,7 @@ class Eisenhower:
         self.build_menu()
 
         # Title and status bar
-        self.title = 'Eisenhower To-Do Matrix'
+        self.title = self.settings.get('title')
         self.window.title(self.title)
         self.titlevar = tk.StringVar()
         self.titlevar.set(self.title)
@@ -291,13 +292,7 @@ class Eisenhower:
         data = {
             "type": "Eisenhower",
             "name": self.title,
-            "settings": {
-                "font_size": self.settings.get('font_size'),
-                "notes_1": self.settings.get('notes_1'),
-                "notes_2": self.settings.get('notes_2'),
-                "notes_3": self.settings.get('notes_3'),
-                "notes_4": self.settings.get('notes_4')
-            },
+            "settings": self.settings.export(),
             "notes_1": self.notes_text[0].get(1.0, tk.END+"-1c"),
             "notes_2": self.notes_text[1].get(1.0, tk.END+"-1c"),
             "notes_3": self.notes_text[2].get(1.0, tk.END+"-1c"),
@@ -332,12 +327,11 @@ class Eisenhower:
             self.settings_window.focus()
     
     def settings_close(self):
-        if self.settings_window != None and hasattr(self.settings_window, "destroy") and callable(getattr(self.settings_window, "destroy")):
-            self.settings_window.destroy()
         self.settings_window = None
 
     def settings_repaint(self):
         """Update window with new settings."""
+        self.titlevar.set(self.settings.get('title'))
         for i in range(0, 4):
             self.notes_label[i].set(self.settings.get('notes_' + str(i+1)))
             #self.notes_label[i].update()
