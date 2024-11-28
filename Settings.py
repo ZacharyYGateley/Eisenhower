@@ -8,12 +8,14 @@ class Settings:
         def extract(key, default):
             return settings[key] if key in settings else default
 
-        self.font_size = extract('font_size', 12)
+        self.font_size = int(extract('font_size', 12)) or 12
         self.set_font()
         self.notes_1 = extract('notes_1', 'Notes 1')
         self.notes_2 = extract('notes_2', 'Notes 2')
         self.notes_3 = extract('notes_3', 'Notes 3')
         self.notes_4 = extract('notes_4', 'Notes 4')
+        self.tab_chars = int(extract('tab_chars', 2)) or 1
+        self.set_tab_width()
         self.title = extract('title', 'Eisenhower To-Do Matrix')
 
     def export(self):
@@ -23,6 +25,8 @@ class Settings:
             "notes_2": self.notes_2,
             "notes_3": self.notes_3,
             "notes_4": self.notes_4,
+            "tab_chars": self.tab_chars,
+            "tab_width": self.tab_width,
             "title": self.title
         }
 
@@ -38,6 +42,10 @@ class Settings:
 
     def set_font(self):
         self.font = font.Font(family=sty.font_mono(), size=self.font_size)
+    
+    def set_tab_width(self, tab_chars=-1):
+        tab_chars = (self.tab_chars if tab_chars < 0 else tab_chars) or 1
+        self.tab_width = self.font.measure(' '*tab_chars)
 
 class SettingsWindow:
     """Update Eisenhower Matrix Settings.
@@ -108,12 +116,18 @@ class SettingsWindow:
         
         # Labels
         tk.Label(right, text='Font Size').grid(row=0, column=0, sticky="E")
+        tk.Label(right, text='Tab Width').grid(row=1, column=0, sticky="E")
         self.entry['font_size'] = tk.Entry(right, validate='all', validatecommand=(dcmd, '%P'), width=3)
+        self.entry['tab_chars'] = tk.Entry(right, validate='all', validatecommand=(dcmd, '%P'), width=2)
         self.entry['font_size'].grid(row=0, column=1, sticky="W")
+        self.entry['tab_chars'].grid(row=1, column=1, sticky="W")
         self.entry['font_size'].insert(0, settings.get('font_size'))
+        self.entry['tab_chars'].insert(0, settings.get('tab_chars'))
 
         right.grid(row=2, column=1, sticky="NSEW", padx=10, pady=10)
 
+        # Bottom row
+        # Interaction buttons
         bottom = tk.Frame(window)
         tk.Button(bottom, text="Update", command=self.save).grid(row=0, column=0)
         tk.Button(bottom, text="Cancel", command=self.close).grid(row=0, column=1)
@@ -142,12 +156,14 @@ class SettingsWindow:
 
     def save(self):
         """Update Settings object and pass it to parent. Close window."""
-        self.settings.set('font_size', self.entry['font_size'].get())
+        self.settings.set('font_size', int(self.entry['font_size'].get()) or 12)
         self.settings.set_font()
         self.settings.set('notes_1', self.entry['notes_1'].get())
         self.settings.set('notes_2', self.entry['notes_2'].get())
         self.settings.set('notes_3', self.entry['notes_3'].get())
         self.settings.set('notes_4', self.entry['notes_4'].get())
+        self.settings.set('tab_chars', int(self.entry['tab_chars'].get()))
+        self.settings.set_tab_width()
         self.settings.set('title', self.entry['title'].get())
         self.parent.settings_set(self.settings)
 
