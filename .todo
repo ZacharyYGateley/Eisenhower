@@ -1,9 +1,13 @@
 Build Readme
 
 Settings:
-* self.title - Create .set_title method. Include .set_title in .open method.
-* self.tab_width
 * type [enter] to save/update
+* make settings prettier
 
 Don't allow multiple instances of same save at once (open. new. open)
 Close option in menu?
+App icon
+Status bar
+    bottom of page 
+    shows which file is currently open
+    temporary messages right side: "saved" or ?

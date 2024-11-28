@@ -21,7 +21,8 @@ class Eisenhower:
             'notes_1': 'Notes 1',
             'notes_2': 'Notes 2',
             'notes_3': 'Notes 3',
-            'notes_4': 'Notes 4'
+            'notes_4': 'Notes 4',
+            'title': 'Eisenhower To-Do Matrix'
         })
         # Perimeter note labels (tkinter label objects)
         self.notes_label = [ None, None, None, None ]
@@ -33,14 +34,12 @@ class Eisenhower:
         self.saved = True
         # File location for saves
         self.file_location = file_location
-        # Tab width for text boxes
-        self.tab_width = self.settings.get('font').measure('  ')
 
         # File menu
         self.build_menu()
 
         # Title and status bar
-        self.title = 'Eisenhower To-Do Matrix'
+        self.title = self.settings.get('title')
         self.window.title(self.title)
         self.titlevar = tk.StringVar()
         self.titlevar.set(self.title)
@@ -70,9 +69,9 @@ class Eisenhower:
         # Only matrix column expands
         self.window.columnconfigure(index=1, weight=1)
 
-        (label_0, field_0, label_1, field_1) = self.build_notes(left, True, 'notes_1', 'notes_2')
+        (label_0, field_0, label_1, field_1) = self.build_notes(left, True)
         self.matrix = self.build_center(center)
-        (label_2, field_2, label_3, field_3) = self.build_notes(right, False, 'notes_3', 'notes_4')
+        (label_2, field_2, label_3, field_3) = self.build_notes(right, False)
 
         self.notes_label = [label_0, label_1, label_2, label_3]
         self.notes_text = [field_0, field_1, field_2, field_3]
@@ -90,11 +89,13 @@ class Eisenhower:
         # Bind CTRL+S
         def key_press(event):
             key = event.char
-            if ord(key) == 19:
+            if len(key) > 0 and ord(key) == 19:
                 self.save()
             else:
                 self.status_unsaved()
         self.window.bind('<KeyPress>', key_press)
+
+        self.settings_repaint()
 
     def build_center(self, master):
         """Build tkinter central column of main window. Used only during __init__."""
@@ -118,15 +119,15 @@ class Eisenhower:
         c10.grid(row=1, column=0, sticky="NSEW")
         c20.grid(row=2, column=0, sticky="NSEW")
 
-        (frame_11, important_urgent) = self.build_scrolledtext(master, bg=sty.bg['iu'], font=self.settings.get('font'), width=50, height=20)
-        (frame_12, important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['inu'], font=self.settings.get('font'), width=50, height=20)
-        (frame_21, not_important_urgent) = self.build_scrolledtext(master, bg=sty.bg['niu'], font=self.settings.get('font'), width=50, height=20)
-        (frame_22, not_important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['ninu'], font=self.settings.get('font'), width=50, height=20)
+        (frame_11, important_urgent) = self.build_scrolledtext(master, bg=sty.bg['iu'], width=50, height=20)
+        (frame_12, important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['inu'], width=50, height=20)
+        (frame_21, not_important_urgent) = self.build_scrolledtext(master, bg=sty.bg['niu'], width=50, height=20)
+        (frame_22, not_important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['ninu'], width=50, height=20)
         
-        important_urgent.config(tabs=self.tab_width)
-        important_not_urgent.config(tabs=self.tab_width)
-        not_important_urgent.config(tabs=self.tab_width)
-        not_important_not_urgent.config(tabs=self.tab_width)
+        #important_urgent.config(tabs=self.tab_width)
+        #important_not_urgent.config(tabs=self.tab_width)
+        #not_important_urgent.config(tabs=self.tab_width)
+        #not_important_not_urgent.config(tabs=self.tab_width)
 
         frame_11.grid(row=1, column=1, sticky="NSEW")
         frame_12.grid(row=1, column=2, sticky="NSEW")
@@ -153,7 +154,7 @@ class Eisenhower:
         file.add_command(label = 'Save', command = self.save)
         file.add_command(label = 'Save As', command = self.saveas)
         file.add_separator() 
-        file.add_command(label = 'Exit', command = self.close)
+        file.add_command(label = 'Close', command = self.close)
 
         edit = tk.Menu(menubar, tearoff = 0)
         menubar.add_cascade(label = 'Edit', menu=edit)
@@ -161,14 +162,12 @@ class Eisenhower:
 
         self.window.config(menu = menubar) 
 
-    def build_notes(self, master, top_grow, label_0_set, label_1_set):
+    def build_notes(self, master, top_grow):
         """Build tkinter left column of main window. Used only during __init__."""
 
         # Titles as string variables
         label_0_text = tk.StringVar()
-        label_0_text.set(self.settings.get(label_0_set))
         label_1_text = tk.StringVar()
-        label_1_text.set(self.settings.get(label_1_set))
 
         # Build widgets
         label_0 = tk.Label(master, textvariable=label_0_text, font=sty.font['header2'], bg=sty.bg['header2'])
@@ -177,8 +176,8 @@ class Eisenhower:
         (frame_1, field_1) = self.build_scrolledtext(master, width=25, font=self.settings.get('font'))
 
         # Configure
-        field_0.config(tabs=self.tab_width)
-        field_1.config(tabs=self.tab_width)
+        #field_0.config(tabs=self.tab_width)
+        #field_1.config(tabs=self.tab_width)
 
         # Add to window
         label_0.grid(row=0, column=0, sticky="EW")
@@ -291,13 +290,7 @@ class Eisenhower:
         data = {
             "type": "Eisenhower",
             "name": self.title,
-            "settings": {
-                "font_size": self.settings.get('font_size'),
-                "notes_1": self.settings.get('notes_1'),
-                "notes_2": self.settings.get('notes_2'),
-                "notes_3": self.settings.get('notes_3'),
-                "notes_4": self.settings.get('notes_4')
-            },
+            "settings": self.settings.export(),
             "notes_1": self.notes_text[0].get(1.0, tk.END+"-1c"),
             "notes_2": self.notes_text[1].get(1.0, tk.END+"-1c"),
             "notes_3": self.notes_text[2].get(1.0, tk.END+"-1c"),
@@ -332,19 +325,19 @@ class Eisenhower:
             self.settings_window.focus()
     
     def settings_close(self):
-        if self.settings_window != None and hasattr(self.settings_window, "destroy") and callable(getattr(self.settings_window, "destroy")):
-            self.settings_window.destroy()
         self.settings_window = None
 
     def settings_repaint(self):
         """Update window with new settings."""
+        self.titlevar.set(self.settings.get('title'))
+        # Loop Label titles
         for i in range(0, 4):
             self.notes_label[i].set(self.settings.get('notes_' + str(i+1)))
-            #self.notes_label[i].update()
+        # Loop all Text fields
         for set in (self.notes_text, self.matrix):
             for text in set:
                 # Change font size only. Assume font is tuple of family and size.
-                text.configure(font=self.settings.get('font'))
+                text.configure(font=self.settings.get('font'), tabs=self.settings.get('tab_width'))
                 text.update()
 
     def settings_set(self, settings: Settings):
