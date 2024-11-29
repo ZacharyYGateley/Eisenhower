@@ -232,7 +232,7 @@ class Eisenhower:
                 title="Select an Eisenhower Matrix File", 
                 filetypes = [('Eisenhower Files', '*.ei*')]
             )
-        if file_location == None:
+        if file_location == None or file_location == "":
             return
         
         # Do not open multiple instances with same location
@@ -254,7 +254,7 @@ class Eisenhower:
                     return
         
         # Do not overwrite current matrix. Open a new instance if there are unsaved changes.
-        if not overwrite and self.file_location != "" and self.file_location != file_location:
+        if (not overwrite and self.file_location != "" and self.file_location != file_location) or (not self.saved and self.file_location == ""):
             main(self.root, file_location=file_location)
         self.file_location = file_location
 
@@ -279,7 +279,7 @@ class Eisenhower:
             matrix.delete(1.0, tk.END)
             matrix.insert(tk.END, data['matrix_' + str(i+1)])
         
-        self.saved = True
+        self.status_saved()
 
     def save(self):
         # Open dialog if not yet saved
@@ -348,9 +348,11 @@ class Eisenhower:
         self.settings_repaint()
 
     def status_unsaved(self):
+        self.saved = False
         self.status_variable.set("CHANGES NOT SAVED")
     
     def status_saved(self):
+        self.saved = True
         self.status_variable.set("")
 
 def main(root, file_location=""): 

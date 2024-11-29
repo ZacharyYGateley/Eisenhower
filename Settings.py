@@ -72,7 +72,7 @@ class SettingsWindow:
         title.grid(row=0, column=0, columnspan=2)
         
         # Number key only callback
-        dcmd = (window.register(self.numeric_callback))
+        dcmd = (window.register(self.callback_numeric))
 
         # Grid top row
         # Matrix title
@@ -135,6 +135,7 @@ class SettingsWindow:
 
         # Make sure self.window is erased on window destroy
         window.protocol("WM_DELETE_WINDOW", self.close)
+        window.bind('<Return>', lambda event: self.save())
 
     def mainloop(self):
         """Separate from __init__ so that __init__ returns self appropriately."""
@@ -148,7 +149,7 @@ class SettingsWindow:
         """Check if window has been destroyed."""
         return self.window is None
 
-    def numeric_callback(self, key):
+    def callback_numeric(self, key):
         if str.isdigit(key) or key == "":
             return True
         else:

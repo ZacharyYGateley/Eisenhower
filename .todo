@@ -1,11 +1,10 @@
 Build Readme
 
+Better "unsaved" trigger
+
 Settings:
-* type [enter] to save/update
 * make settings prettier
 
-Don't allow multiple instances of same save at once (open. new. open)
-Close option in menu?
 App icon
 Status bar
     bottom of page 
