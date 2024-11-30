@@ -1,6 +1,10 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import font
+from tkinter import colorchooser as cc
+from tkinter import PhotoImage as pi
 import Styles as sty
+import pathlib, os
 
 class Settings:
     """Eisenhower Matrix Settings."""
@@ -8,6 +12,10 @@ class Settings:
         def extract(key, default):
             return settings[key] if key in settings else default
 
+        self.bg_1 = extract('bg_1', sty.bg['iu'])
+        self.bg_2 = extract('bg_2', sty.bg['inu'])
+        self.bg_3 = extract('bg_3', sty.bg['niu'])
+        self.bg_4 = extract('bg_4', sty.bg['ninu'])
         self.font_size = int(extract('font_size', 12)) or 12
         self.set_font()
         self.notes_1 = extract('notes_1', 'Notes 1')
@@ -20,6 +28,10 @@ class Settings:
 
     def export(self):
         return {
+            "bg_1": self.bg_1,
+            "bg_2": self.bg_2,
+            "bg_3": self.bg_3,
+            "bg_4": self.bg_4,
             "font_size": self.font_size,
             "notes_1": self.notes_1,
             "notes_2": self.notes_2,
@@ -66,81 +78,124 @@ class SettingsWindow:
         # Child window of respective Matrix window
         window = tk.Toplevel(self.parent.window)
         self.window = window
-        window.title(parent.title)
-        title = tk.Label(window, text='Matrix Settings')
-        title.config(font=sty.font['header3'])
-        title.grid(row=0, column=0, columnspan=2)
+        window.title('Matrix Settings')
         
         # Number key only callback
         dcmd = (window.register(self.callback_numeric))
 
+        # Color picker image
+        img_file_name = "color_picker.png"
+        current_dir = pathlib.Path(__file__).parent.resolve()
+        img_path = os.path.join(current_dir, img_file_name)
+        self.picker = tk.PhotoImage(file=img_path)
+
         # Grid top row
         # Matrix title
-        top = tk.Frame(window)
-        tk.Label(top, text="Matrix Title").grid(row=0, column=0, sticky="E")
-        self.entry['title'] = tk.Entry(top)
+        top = ttk.Frame(window)
+        tk.Label(top, text="Matrix Title", font=sty.font['header3']).grid(row=0, column=0, sticky="E")
+        self.entry['title'] = ttk.Entry(top, font=sty.font['header3'])
         self.entry['title'].grid(row=0, column=1, sticky="W")
         self.entry['title'].insert(0, settings.get('title'))
-        top.grid(row=1, column=0, columnspan=2)
+        top.grid(row=0, column=0, columnspan=2, pady=10)
+
+        # Title separator
+        sep = ttk.Separator(window, orient="horizontal")
+        sep.grid(row=1, column=0, columnspan=2, sticky="ew")
 
         # Grid left column
+        left = ttk.Frame(window)
+
         # Note headers
-        left = tk.Frame(window)
+        tk.Label(left, text='Headers', font=sty.font['header3']).grid(row=0, column=0, columnspan=2)
         tk.Label(left, text='Custom Notes 1').grid(row=1, column=0, sticky="E")
         tk.Label(left, text='Custom Notes 2').grid(row=2, column=0, sticky="E")
         tk.Label(left, text='Custom Notes 3').grid(row=3, column=0, sticky="E")
         tk.Label(left, text='Custom Notes 4').grid(row=4, column=0, sticky="E")
-        
-        # Fields
-        self.entry['notes_1'] = tk.Entry(left)
-        self.entry['notes_2'] = tk.Entry(left)
-        self.entry['notes_3'] = tk.Entry(left)
-        self.entry['notes_4'] = tk.Entry(left)
-
+        self.entry['notes_1'] = ttk.Entry(left)
+        self.entry['notes_2'] = ttk.Entry(left)
+        self.entry['notes_3'] = ttk.Entry(left)
+        self.entry['notes_4'] = ttk.Entry(left)
         self.entry['notes_1'].grid(row=1, column=1, sticky="W")
         self.entry['notes_2'].grid(row=2, column=1, sticky="W")
         self.entry['notes_3'].grid(row=3, column=1, sticky="W")
         self.entry['notes_4'].grid(row=4, column=1, sticky="W")
-
-        # Set default values
         self.entry['notes_1'].insert(0, settings.get('notes_1'))
         self.entry['notes_2'].insert(0, settings.get('notes_2'))
         self.entry['notes_3'].insert(0, settings.get('notes_3'))
         self.entry['notes_4'].insert(0, settings.get('notes_4'))
 
-        left.grid(row=2, column=0, sticky="NSEW", padx=10, pady=10)
-
-        # Right column
-        # Font size and matrix background colors
-        right = tk.Frame(window)
-        
-        # Labels
-        tk.Label(right, text='Font Size').grid(row=0, column=0, sticky="E")
-        tk.Label(right, text='Tab Width').grid(row=1, column=0, sticky="E")
-        self.entry['font_size'] = tk.Entry(right, validate='all', validatecommand=(dcmd, '%P'), width=3)
-        self.entry['tab_chars'] = tk.Entry(right, validate='all', validatecommand=(dcmd, '%P'), width=2)
-        self.entry['font_size'].grid(row=0, column=1, sticky="W")
-        self.entry['tab_chars'].grid(row=1, column=1, sticky="W")
+        # Styles
+        tk.Label(left, text='Styles', font=sty.font['header3']).grid(row=5, column=0, columnspan=4, pady=(5, 0))
+        tk.Label(left, text='Font Size').grid(row=6, column=0, sticky="E")
+        tk.Label(left, text='Tab Width').grid(row=7, column=0, sticky="E")
+        self.entry['font_size'] = ttk.Entry(left, validate='all', validatecommand=(dcmd, '%P'), width=3)
+        self.entry['tab_chars'] = ttk.Entry(left, validate='all', validatecommand=(dcmd, '%P'), width=2)
+        self.entry['font_size'].grid(row=6, column=1, sticky="W")
+        self.entry['tab_chars'].grid(row=7, column=1, sticky="W")
         self.entry['font_size'].insert(0, settings.get('font_size'))
         self.entry['tab_chars'].insert(0, settings.get('tab_chars'))
 
-        right.grid(row=2, column=1, sticky="NSEW", padx=10, pady=10)
+        left.grid(row=3, column=0, sticky="NSEW", padx=10, pady=10)
+
+        # Right column
+        # Font size and matrix background colors
+        right = ttk.Frame(window)
+        
+        # Backgrounds
+        tk.Label(right, text='Backgrounds', font=sty.font['header3']).grid(row=0, column=0, columnspan=4)
+        tk.Label(right, text='Matrix 1').grid(row=1, column=0)
+        tk.Label(right, text='Matrix 2').grid(row=2, column=0)
+        tk.Label(right, text='Matrix 3').grid(row=3, column=0)
+        tk.Label(right, text='Matrix 4').grid(row=4, column=0)
+        bg_1 = settings.get('bg_1')
+        bg_2 = settings.get('bg_2')
+        bg_3 = settings.get('bg_3')
+        bg_4 = settings.get('bg_4')
+        self.entry['bg_1'] = ttk.Entry(right, width=7)
+        self.entry['bg_2'] = ttk.Entry(right, width=7)
+        self.entry['bg_3'] = ttk.Entry(right, width=7)
+        self.entry['bg_4'] = ttk.Entry(right, width=7)
+        self.entry['bg_1'].grid(row=1, column=1)
+        self.entry['bg_2'].grid(row=2, column=1)
+        self.entry['bg_3'].grid(row=3, column=1)
+        self.entry['bg_4'].grid(row=4, column=1)
+        self.entry['bg_1'].insert(0, settings.get('bg_1'))
+        self.entry['bg_2'].insert(0, settings.get('bg_2'))
+        self.entry['bg_3'].insert(0, settings.get('bg_3'))
+        self.entry['bg_4'].insert(0, settings.get('bg_4'))
+        ex_1 = tk.Frame(right, bg=bg_1, width=16, height=16)
+        ex_2 = tk.Frame(right, bg=bg_2, width=16, height=16)
+        ex_3 = tk.Frame(right, bg=bg_3, width=16, height=16)
+        ex_4 = tk.Frame(right, bg=bg_4, width=16, height=16)
+        ex_1.grid(row=1, column=2, sticky="NSEW", padx=2, pady=2)
+        ex_2.grid(row=2, column=2, sticky="NSEW", padx=2, pady=2)
+        ex_3.grid(row=3, column=2, sticky="NSEW", padx=2, pady=2)
+        ex_4.grid(row=4, column=2, sticky="NSEW", padx=2, pady=2)
+        ttk.Button(right, image=self.picker, command=lambda: self.colorpick(self.entry['bg_1'], ex_1), width=1).grid(row=1, column=3)
+        ttk.Button(right, image=self.picker, command=lambda: self.colorpick(self.entry['bg_2'], ex_2), width=1).grid(row=2, column=3)
+        ttk.Button(right, image=self.picker, command=lambda: self.colorpick(self.entry['bg_3'], ex_3), width=1).grid(row=3, column=3)
+        ttk.Button(right, image=self.picker, command=lambda: self.colorpick(self.entry['bg_4'], ex_4), width=1).grid(row=4, column=3)
+
+        right.grid(row=3, column=1, sticky="NSEW", padx=10, pady=10)
 
         # Bottom row
         # Interaction buttons
-        bottom = tk.Frame(window)
-        tk.Button(bottom, text="Update", command=self.save).grid(row=0, column=0)
-        tk.Button(bottom, text="Cancel", command=self.close).grid(row=0, column=1)
-        bottom.grid(row=3, column=0, columnspan=2, padx=20, pady=10)
+        bottom = ttk.Frame(window)
+        ttk.Button(bottom, text="Update", command=self.save).grid(row=0, column=0)
+        ttk.Button(bottom, text="Cancel", command=self.close).grid(row=0, column=1)
+        bottom.grid(row=4, column=0, columnspan=2, padx=20, pady=10)
 
         # Make sure self.window is erased on window destroy
         window.protocol("WM_DELETE_WINDOW", self.close)
         window.bind('<Return>', lambda event: self.save())
 
-    def mainloop(self):
-        """Separate from __init__ so that __init__ returns self appropriately."""
-        self.window.mainloop()
-    
+    def colorpick(self, field, sample):
+        color_code = cc.askcolor(title="Choose color", color=field.get())
+        if color_code[1] is not None:
+            field.delete(0, tk.END)
+            field.insert(0, color_code[1])
+            sample.config(bg=color_code[1])
+
     def focus(self):
         """Forces window focus. Used when attempt to open setting when settings already open."""
         self.window.focus_force()
