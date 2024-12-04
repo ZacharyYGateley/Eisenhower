@@ -14,6 +14,7 @@ class Eisenhower:
     def __init__(self, root, file_location=""):
         self.root = root
         self.window = tk.Toplevel()
+        self.window.iconbitmap('images/feather.ico')
         self.settings_window = None
         # Volatile matrix settings
         self.settings = Settings({

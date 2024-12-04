@@ -78,13 +78,14 @@ class SettingsWindow:
         # Child window of respective Matrix window
         window = tk.Toplevel(self.parent.window)
         self.window = window
+        self.window.iconbitmap('images/feather.ico')
         window.title('Matrix Settings')
         
         # Number key only callback
         dcmd = (window.register(self.callback_numeric))
 
         # Color picker image
-        img_file_name = "color_picker.png"
+        img_file_name = "images/color_picker.png"
         current_dir = pathlib.Path(__file__).parent.resolve()
         img_path = os.path.join(current_dir, img_file_name)
         self.picker = tk.PhotoImage(file=img_path)
