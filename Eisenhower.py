@@ -17,14 +17,7 @@ class Eisenhower:
         self.window.iconbitmap('images/feather.ico')
         self.settings_window = None
         # Volatile matrix settings
-        self.settings = Settings({
-            'font_size': 12,
-            'notes_1': 'Notes 1',
-            'notes_2': 'Notes 2',
-            'notes_3': 'Notes 3',
-            'notes_4': 'Notes 4',
-            'title': 'Eisenhower To-Do Matrix'
-        })
+        self.settings = Settings()
         # Perimeter note labels (tkinter label objects)
         self.notes_label = [ None, None, None, None ]
         # Perimeter note boxes (tkinter text objects)
@@ -124,11 +117,6 @@ class Eisenhower:
         (frame_12, important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['inu'], width=50, height=20)
         (frame_21, not_important_urgent) = self.build_scrolledtext(master, bg=sty.bg['niu'], width=50, height=20)
         (frame_22, not_important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['ninu'], width=50, height=20)
-        
-        #important_urgent.config(tabs=self.tab_width)
-        #important_not_urgent.config(tabs=self.tab_width)
-        #not_important_urgent.config(tabs=self.tab_width)
-        #not_important_not_urgent.config(tabs=self.tab_width)
 
         frame_11.grid(row=1, column=1, sticky="NSEW")
         frame_12.grid(row=1, column=2, sticky="NSEW")
@@ -141,7 +129,7 @@ class Eisenhower:
         master.rowconfigure(index=1, weight=1, uniform="row")
         master.rowconfigure(index=2, weight=1, uniform="row")
 
-        return (important_urgent, not_important_urgent, important_not_urgent, not_important_not_urgent)
+        return (important_urgent, important_not_urgent, not_important_urgent, not_important_not_urgent)
 
     def build_menu(self):
         """Build tkinter menu of main window. Used only during __init__."""
@@ -334,12 +322,19 @@ class Eisenhower:
         # Loop Label titles
         for i in range(0, 4):
             self.notes_label[i].set(self.settings.get('notes_' + str(i+1)))
-        # Loop all Text fields
-        for set in (self.notes_text, self.matrix):
-            for text in set:
-                # Change font size only. Assume font is tuple of family and size.
-                text.configure(font=self.settings.get('font'), tabs=self.settings.get('tab_width'))
-                text.update()
+        
+        f = self.settings.get('font')
+        t = self.settings.get('tab_width')
+        # Notes
+        for i in range(0, 4):
+            text = self.notes_text[i]
+            text.configure(font=f, tabs=t, background=self.settings.get('bgn_' + str(i+1)), foreground=self.settings.get('fgn_' + str(i+1)))
+            text.update()
+        # Matrix
+        for i in range(0, 4):
+            text = self.matrix[i]
+            text.configure(font=f, tabs=t, background=self.settings.get('bgm_' + str(i+1)), foreground=self.settings.get('fgm_' + str(i+1)))
+            text.update()
 
     def settings_set(self, settings: Settings):
         # Only save valid settings. Ignore bad setting keys.
