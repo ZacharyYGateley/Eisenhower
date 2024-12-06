@@ -12,28 +12,35 @@ class Settings:
         def extract(key, default):
             return settings[key] if key in settings else default
 
+        # Matrix background colors
         self.bgm_1 = extract('bgm_1', sty.bg['iu'])
         self.bgm_2 = extract('bgm_2', sty.bg['inu'])
         self.bgm_3 = extract('bgm_3', sty.bg['niu'])
         self.bgm_4 = extract('bgm_4', sty.bg['ninu'])
+        # Side note background colors
         self.bgn_1 = extract('bgn_1', '#ffffff')
         self.bgn_2 = extract('bgn_2', '#ffffff')
         self.bgn_3 = extract('bgn_3', '#ffffff')
         self.bgn_4 = extract('bgn_4', '#ffffff')
+        # Matrix foreground colors
         self.fgm_1 = extract('fgm_1', '#000000')
         self.fgm_2 = extract('fgm_2', '#000000')
         self.fgm_3 = extract('fgm_3', '#000000')
         self.fgm_4 = extract('fgm_4', '#000000')
-        self.fgn_1 = extract('fgm_1', '#000000')
-        self.fgn_2 = extract('fgm_2', '#000000')
-        self.fgn_3 = extract('fgm_3', '#000000')
-        self.fgn_4 = extract('fgm_4', '#000000')
+        # Side note foreground colors
+        self.fgn_1 = extract('fgn_1', '#000000')
+        self.fgn_2 = extract('fgn_2', '#000000')
+        self.fgn_3 = extract('fgn_3', '#000000')
+        self.fgn_4 = extract('fgn_4', '#000000')
+        # Universal font size
         self.font_size = int(extract('font_size', 12)) or 12
         self.set_font()
+        # Side note headers
         self.notes_1 = extract('notes_1', 'Notes 1')
         self.notes_2 = extract('notes_2', 'Notes 2')
         self.notes_3 = extract('notes_3', 'Notes 3')
         self.notes_4 = extract('notes_4', 'Notes 4')
+        # Tab width (char width is setting, actual width set by .set_tab_width method)
         self.tab_chars = int(extract('tab_chars', 2)) or 1
         self.set_tab_width()
         self.title = extract('title', 'Eisenhower To-Do Matrix')
@@ -44,6 +51,18 @@ class Settings:
             "bgm_2": self.bgm_2,
             "bgm_3": self.bgm_3,
             "bgm_4": self.bgm_4,
+            "bgn_1": self.bgn_1,
+            "bgn_2": self.bgn_2,
+            "bgn_3": self.bgn_3,
+            "bgn_4": self.bgn_4,
+            "fgm_1": self.fgm_1,
+            "fgm_2": self.fgm_2,
+            "fgm_3": self.fgm_3,
+            "fgm_4": self.fgm_4,
+            "fgn_1": self.fgn_1,
+            "fgn_2": self.fgn_2,
+            "fgn_3": self.fgn_3,
+            "fgn_4": self.fgn_4,
             "font_size": self.font_size,
             "notes_1": self.notes_1,
             "notes_2": self.notes_2,
@@ -274,6 +293,18 @@ class SettingsWindow:
         self.settings.set('bgm_2', self.entry['bgm_2'].get())
         self.settings.set('bgm_3', self.entry['bgm_3'].get())
         self.settings.set('bgm_4', self.entry['bgm_4'].get())
+        self.settings.set('bgn_1', self.entry['bgn_1'].get())
+        self.settings.set('bgn_2', self.entry['bgn_2'].get())
+        self.settings.set('bgn_3', self.entry['bgn_3'].get())
+        self.settings.set('bgn_4', self.entry['bgn_4'].get())
+        self.settings.set('fgm_1', self.entry['fgm_1'].get())
+        self.settings.set('fgm_2', self.entry['fgm_2'].get())
+        self.settings.set('fgm_3', self.entry['fgm_3'].get())
+        self.settings.set('fgm_4', self.entry['fgm_4'].get())
+        self.settings.set('fgn_1', self.entry['fgn_1'].get())
+        self.settings.set('fgn_2', self.entry['fgn_2'].get())
+        self.settings.set('fgn_3', self.entry['fgn_3'].get())
+        self.settings.set('fgn_4', self.entry['fgn_4'].get())
         self.settings.set('font_size', int(self.entry['font_size'].get()) or 12)
         self.settings.set_font()
         self.settings.set('notes_1', self.entry['notes_1'].get())
@@ -284,6 +315,7 @@ class SettingsWindow:
         self.settings.set_tab_width()
         self.settings.set('title', self.entry['title'].get())
         self.parent.settings_set(self.settings)
+        self.parent.status_unsaved()
 
         self.close()
 

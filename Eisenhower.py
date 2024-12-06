@@ -245,6 +245,7 @@ class Eisenhower:
         # Do not overwrite current matrix. Open a new instance if there are unsaved changes.
         if (not overwrite and self.file_location != "" and self.file_location != file_location) or (not self.saved and self.file_location == ""):
             main(self.root, file_location=file_location)
+            return
         self.file_location = file_location
 
         # JSON parses file
@@ -284,9 +285,13 @@ class Eisenhower:
             "notes_2": self.notes_text[1].get(1.0, tk.END+"-1c"),
             "notes_3": self.notes_text[2].get(1.0, tk.END+"-1c"),
             "notes_4": self.notes_text[3].get(1.0, tk.END+"-1c"),
+            # Important urgent
             "matrix_1": self.matrix[0].get(1.0, tk.END+"-1c"),
+            # Important not urgent
             "matrix_2": self.matrix[1].get(1.0, tk.END+"-1c"),
+            # Not important urgent
             "matrix_3": self.matrix[2].get(1.0, tk.END+"-1c"),
+            # Not important not urgent
             "matrix_4": self.matrix[3].get(1.0, tk.END+"-1c")
         }
 
