@@ -224,7 +224,7 @@ class SettingsWindow:
         text_settings.grid(row=1, column=2, padx=10, sticky="NS", pady=10)
         notes_colors.grid(row=2, column=0, sticky="NS", padx=10, pady=10)
         matrix_colors.grid(row=2, column=2, sticky="NS", padx=10, pady=10)
-        bottom.grid(row=3, column=0, columnspan=2, padx=20, pady=10)
+        bottom.grid(row=3, column=0, columnspan=3, padx=20, pady=10)
 
         # Make sure self.window is erased on window destroy
         window.protocol("WM_DELETE_WINDOW", self.close)
