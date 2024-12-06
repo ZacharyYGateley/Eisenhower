@@ -14,16 +14,10 @@ class Eisenhower:
     def __init__(self, root, file_location=""):
         self.root = root
         self.window = tk.Toplevel()
+        self.window.iconbitmap('images/feather.ico')
         self.settings_window = None
         # Volatile matrix settings
-        self.settings = Settings({
-            'font_size': 12,
-            'notes_1': 'Notes 1',
-            'notes_2': 'Notes 2',
-            'notes_3': 'Notes 3',
-            'notes_4': 'Notes 4',
-            'title': 'Eisenhower To-Do Matrix'
-        })
+        self.settings = Settings()
         # Perimeter note labels (tkinter label objects)
         self.notes_label = [ None, None, None, None ]
         # Perimeter note boxes (tkinter text objects)
@@ -123,11 +117,6 @@ class Eisenhower:
         (frame_12, important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['inu'], width=50, height=20)
         (frame_21, not_important_urgent) = self.build_scrolledtext(master, bg=sty.bg['niu'], width=50, height=20)
         (frame_22, not_important_not_urgent) = self.build_scrolledtext(master, bg=sty.bg['ninu'], width=50, height=20)
-        
-        #important_urgent.config(tabs=self.tab_width)
-        #important_not_urgent.config(tabs=self.tab_width)
-        #not_important_urgent.config(tabs=self.tab_width)
-        #not_important_not_urgent.config(tabs=self.tab_width)
 
         frame_11.grid(row=1, column=1, sticky="NSEW")
         frame_12.grid(row=1, column=2, sticky="NSEW")
@@ -140,7 +129,7 @@ class Eisenhower:
         master.rowconfigure(index=1, weight=1, uniform="row")
         master.rowconfigure(index=2, weight=1, uniform="row")
 
-        return (important_urgent, not_important_urgent, important_not_urgent, not_important_not_urgent)
+        return (important_urgent, important_not_urgent, not_important_urgent, not_important_not_urgent)
 
     def build_menu(self):
         """Build tkinter menu of main window. Used only during __init__."""
@@ -232,7 +221,7 @@ class Eisenhower:
                 title="Select an Eisenhower Matrix File", 
                 filetypes = [('Eisenhower Files', '*.ei*')]
             )
-        if file_location == None:
+        if file_location == None or file_location == "":
             return
         
         # Do not open multiple instances with same location
@@ -254,8 +243,9 @@ class Eisenhower:
                     return
         
         # Do not overwrite current matrix. Open a new instance if there are unsaved changes.
-        if not overwrite and self.file_location != "" and self.file_location != file_location:
+        if (not overwrite and self.file_location != "" and self.file_location != file_location) or (not self.saved and self.file_location == ""):
             main(self.root, file_location=file_location)
+            return
         self.file_location = file_location
 
         # JSON parses file
@@ -279,7 +269,7 @@ class Eisenhower:
             matrix.delete(1.0, tk.END)
             matrix.insert(tk.END, data['matrix_' + str(i+1)])
         
-        self.saved = True
+        self.status_saved()
 
     def save(self):
         # Open dialog if not yet saved
@@ -295,9 +285,13 @@ class Eisenhower:
             "notes_2": self.notes_text[1].get(1.0, tk.END+"-1c"),
             "notes_3": self.notes_text[2].get(1.0, tk.END+"-1c"),
             "notes_4": self.notes_text[3].get(1.0, tk.END+"-1c"),
+            # Important urgent
             "matrix_1": self.matrix[0].get(1.0, tk.END+"-1c"),
+            # Important not urgent
             "matrix_2": self.matrix[1].get(1.0, tk.END+"-1c"),
+            # Not important urgent
             "matrix_3": self.matrix[2].get(1.0, tk.END+"-1c"),
+            # Not important not urgent
             "matrix_4": self.matrix[3].get(1.0, tk.END+"-1c")
         }
 
@@ -333,12 +327,19 @@ class Eisenhower:
         # Loop Label titles
         for i in range(0, 4):
             self.notes_label[i].set(self.settings.get('notes_' + str(i+1)))
-        # Loop all Text fields
-        for set in (self.notes_text, self.matrix):
-            for text in set:
-                # Change font size only. Assume font is tuple of family and size.
-                text.configure(font=self.settings.get('font'), tabs=self.settings.get('tab_width'))
-                text.update()
+        
+        f = self.settings.get('font')
+        t = self.settings.get('tab_width')
+        # Notes
+        for i in range(0, 4):
+            text = self.notes_text[i]
+            text.configure(font=f, tabs=t, background=self.settings.get('bgn_' + str(i+1)), foreground=self.settings.get('fgn_' + str(i+1)))
+            text.update()
+        # Matrix
+        for i in range(0, 4):
+            text = self.matrix[i]
+            text.configure(font=f, tabs=t, background=self.settings.get('bgm_' + str(i+1)), foreground=self.settings.get('fgm_' + str(i+1)))
+            text.update()
 
     def settings_set(self, settings: Settings):
         # Only save valid settings. Ignore bad setting keys.
@@ -348,9 +349,11 @@ class Eisenhower:
         self.settings_repaint()
 
     def status_unsaved(self):
+        self.saved = False
         self.status_variable.set("CHANGES NOT SAVED")
     
     def status_saved(self):
+        self.saved = True
         self.status_variable.set("")
 
 def main(root, file_location=""): 

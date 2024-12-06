@@ -1,12 +1,11 @@
 Build Readme
 
-Settings:
-* type [enter] to save/update
-* make settings prettier
+Better "unsaved" trigger
+Menu function to create quick-open shortcut (windows only?)
+Enable CTRL+Z undo
 
-Don't allow multiple instances of same save at once (open. new. open)
-Close option in menu?
-App icon
+Settings: font?
+
 Status bar
     bottom of page 
     shows which file is currently open
