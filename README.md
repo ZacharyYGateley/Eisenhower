@@ -8,9 +8,9 @@ The heart of this project is the Eisenhower To-Do Matrix. I have added additiona
 
 ## Getting Started
 
-The application is written in base Python 3. The only necessary files to run the application are Eisenhower.py, Settings.py, and Styles.py. It is recommended to keep the images folder as well. These files and this folder must all be in the same location on your computer.
+The application is written Python 3's Standard Library. The only necessary files to run the application are Eisenhower.py, Settings.py, Styles.py, and the images/ folder. These files and this folder must all be in the same location on your computer.
 
-Open Eisenhower.py with python 3 to run the application.
+Open Eisenhower.py with python 3 to run the application. It is recommended to use the `pythonw` command so that a terminal window does not open.
 
 ## Basics
 
@@ -38,7 +38,7 @@ Settings are not universal. Settings belong to the matrix save itself.
 
 ## Shortcuts
 
-If you will be regularly working with the same matrix, it can be helpful to create a shortcut to automatically open that specific matrix. You may pass the file name as the second parameter to Python to open the file directly. Use "pythonw" instead of "python" so that only the Tkinter (GUI) window opens. Otherwise, a command prompt window will open in the background and will close your matrix when it is closed.
+If you will be regularly working with the same matrix, it can be helpful to create a shortcut to automatically open that specific matrix. You may pass the file name as the second parameter to Python to open the file directly. Use `pythonw` instead of `python` so that only the Tkinter (GUI) window opens. Otherwise, a terminal window will open in the background and will close your matrix when it is closed.
 
 ```
 pythonw "[path_to_Eisenhower.py]" "[path_to_document.ei]"
