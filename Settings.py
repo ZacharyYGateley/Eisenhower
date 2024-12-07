@@ -5,6 +5,7 @@ from tkinter import colorchooser as cc
 from tkinter import PhotoImage as pi
 import Styles as sty
 import pathlib, os
+import re
 
 class Settings:
     """Eisenhower Matrix Settings."""
@@ -170,7 +171,10 @@ class SettingsWindow:
 
         # Custom note colors
         notes_colors = ttk.Frame(window)
-        tk.Label(notes_colors, text='Side Notes', font=sty.font['header3']).grid(row=0, column=0, columnspan=2, pady=(0, 5))
+        nc_header = ttk.Frame(notes_colors)
+        tk.Label(nc_header, text='Side Notes', font=sty.font['header3']).pack()
+        ttk.Button(nc_header, text="Defaults", command=self.default_note_colors).place(relx=1.0, rely=0.5, anchor="e")
+        nc_header.grid(row=0, column=0, columnspan=2, pady=(0, 5), sticky="EW")
 
         notes_bg = ttk.Frame(notes_colors)
         notes_fg = ttk.Frame(notes_colors)
@@ -192,7 +196,11 @@ class SettingsWindow:
 
         # Matrix colors
         matrix_colors = ttk.Frame(window)
-        tk.Label(matrix_colors, text='Matrix', font=sty.font['header3']).grid(row=0, column=0, columnspan=2, pady=(0, 5))
+        mc_header = ttk.Frame(matrix_colors)
+        tk.Label(mc_header, text='Matrix', font=sty.font['header3']).pack()
+        ttk.Button(mc_header, text="Defaults", command=self.default_matrix_colors).place(relx=1.0, rely=0.5, anchor="e")
+        mc_header.grid(row=0, column=0, columnspan=2, pady=(0, 5), sticky="EW")
+
 
         matrix_bg = ttk.Frame(matrix_colors)
         matrix_fg = ttk.Frame(matrix_colors)
@@ -259,19 +267,65 @@ class SettingsWindow:
         ex_2.grid(row=2, column=2, sticky="NSEW", padx=2, pady=2)
         ex_3.grid(row=3, column=2, sticky="NSEW", padx=2, pady=2)
         ex_4.grid(row=4, column=2, sticky="NSEW", padx=2, pady=2)
-        ttk.Button(parent, image=self.picker, command=lambda: self.colorpick(color_1, ex_1), width=1).grid(row=1, column=3)
-        ttk.Button(parent, image=self.picker, command=lambda: self.colorpick(color_2, ex_2), width=1).grid(row=2, column=3)
-        ttk.Button(parent, image=self.picker, command=lambda: self.colorpick(color_3, ex_3), width=1).grid(row=3, column=3)
-        ttk.Button(parent, image=self.picker, command=lambda: self.colorpick(color_4, ex_4), width=1).grid(row=4, column=3)
+        color_1.color_set = lambda event=None: self.color_set(color_1, ex_1)
+        color_2.color_set = lambda event=None: self.color_set(color_2, ex_2)
+        color_3.color_set = lambda event=None: self.color_set(color_3, ex_3)
+        color_4.color_set = lambda event=None: self.color_set(color_4, ex_4)
+        ttk.Button(parent, image=self.picker, command=lambda: self.color_pick(color_1, ex_1), width=1).grid(row=1, column=3)
+        ttk.Button(parent, image=self.picker, command=lambda: self.color_pick(color_2, ex_2), width=1).grid(row=2, column=3)
+        ttk.Button(parent, image=self.picker, command=lambda: self.color_pick(color_3, ex_3), width=1).grid(row=3, column=3)
+        ttk.Button(parent, image=self.picker, command=lambda: self.color_pick(color_4, ex_4), width=1).grid(row=4, column=3)
+        color_1.bind('<KeyRelease>', color_1.color_set)
+        color_2.bind('<KeyRelease>', color_2.color_set)
+        color_3.bind('<KeyRelease>', color_3.color_set)
+        color_4.bind('<KeyRelease>', color_4.color_set)
 
         return (color_1, color_2, color_3, color_4)
 
-    def colorpick(self, field, sample):
+    def color_pick(self, field, sample):
+        """Select color from color picker."""
         color_code = cc.askcolor(title="Choose color", color=field.get())
         if color_code[1] is not None:
             field.delete(0, tk.END)
             field.insert(0, color_code[1])
-            sample.config(bg=color_code[1])
+            self.color_set(field, sample)
+    
+    def color_set(self, field, sample):
+        """Set color of example square if color is valid."""
+        # Only accept hex colors
+        valid_color = re.compile(r'^#([\dabcdefABCDEF]{3}){1,2}$')
+        color = field.get()
+        if not isinstance(re.search(valid_color, color), re.Match):
+            # Invalid color? Set to background color of window
+            color = "#f0f0f0"
+        sample.config(bg=color)
+        
+
+    def default_matrix_colors(self):
+        default = Settings()
+        for i in range(0, 4):
+            key = 'gm_' + str(i + 1)
+            bg = self.entry['b' + key]
+            bg.delete(0, tk.END)
+            bg.insert(0, default.get('b' + key))
+            bg.color_set()
+            fg = self.entry['f' + key]
+            fg.delete(0, tk.END)
+            fg.insert(0, default.get('f' + key))
+            fg.color_set()
+    
+    def default_note_colors(self):
+        default = Settings()
+        for i in range(0, 4):
+            key = 'gn_' + str(i + 1)
+            bg = self.entry['b' + key]
+            bg.delete(0, tk.END)
+            bg.insert(0, default.get('b' + key))
+            bg.color_set()
+            fg = self.entry['f' + key]
+            fg.delete(0, tk.END)
+            fg.insert(0, default.get('f' + key))
+            fg.color_set()
 
     def focus(self):
         """Forces window focus. Used when attempt to open setting when settings already open."""

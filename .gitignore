@@ -1,6 +1,10 @@
+# PyCharm
 .idea/
+# Visual Studio Code
 .vscode/
+# Cache created by python
 __pycache__/
+# Eisenhower files
 *.ei
-archived/
+# windows shortcuts
 *.lnk

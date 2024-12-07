@@ -42,20 +42,23 @@ class Eisenhower:
         title.grid(row=0, column=1)
 
         self.status_variable = tk.StringVar()
-        self.status_timeout = None
-        status = tk.Label(self.window, textvar=self.status_variable, fg="red")
-        status.grid(row=0, column=0, sticky="W")
+        status_message = tk.Label(self.window, textvar=self.status_variable, fg="#ff0000")
+        status_message.grid(row=0, column=0, sticky="W")
 
         # 1x3 column grid
         # Column 1: Embedded 2x1 grid
         # Column 2: Embedded 3x3 grid
         # Column 3: Embedded 2x1 grid
         left = tk.Frame(self.window)
-        left.grid(column=0, row=1, sticky="NSEW")
+        left.grid(row=1, column=0, sticky="NSEW")
         center = tk.Frame(self.window, padx=10)
-        center.grid(column=1, row=1, sticky="NSEW")
+        center.grid(row=1, column=1, sticky="NSEW")
         right = tk.Frame(self.window)
-        right.grid(column=2, row=1, sticky="NSEW")
+        right.grid(row=1, column=2, sticky="NSEW")
+
+        self.location_variable = tk.StringVar()
+        location_bar = tk.Label(self.window, textvar=self.location_variable, bg="#ffffff", fg="#000000", justify="left", anchor="w")
+        location_bar.grid(row=2, column=0, columnspan=3, sticky="NSEW")
 
         # Configure grid
         # Title row does not expand
@@ -64,7 +67,7 @@ class Eisenhower:
         self.window.columnconfigure(index=1, weight=1)
 
         (label_0, field_0, label_1, field_1) = self.build_notes(left, True)
-        self.matrix = self.build_center(center)
+        self.matrix = self.build_matrix(center)
         (label_2, field_2, label_3, field_3) = self.build_notes(right, False)
 
         self.notes_label = [label_0, label_1, label_2, label_3]
@@ -96,7 +99,7 @@ class Eisenhower:
 
         self.window.focus()
 
-    def build_center(self, master):
+    def build_matrix(self, master):
         """Build tkinter central column of main window. Used only during __init__."""
         c10 = tk.Frame(master, bg=sty.bg['i'])
         c20 = tk.Frame(master, bg=sty.bg['ni'])
@@ -141,20 +144,21 @@ class Eisenhower:
         menubar = tk.Menu(self.window) 
   
         # Adding File Menu and commands 
-        file = tk.Menu(menubar, tearoff = 0) 
-        menubar.add_cascade(label = 'File', menu = file) 
-        file.add_command(label = 'New Matrix', command = self.new)
-        file.add_command(label = 'Open Matrix', command = self.open)
-        file.add_command(label = 'Save', command = self.save)
-        file.add_command(label = 'Save As', command = self.saveas)
-        file.add_separator() 
-        file.add_command(label = 'Close', command = self.close)
+        file_menu = tk.Menu(menubar, tearoff=0) 
+        menubar.add_cascade(label='File', menu=file_menu) 
+        file_menu.add_command(label='New Matrix', command=self.new)
+        file_menu.add_command(label='Open Matrix', command=self.open)
+        file_menu.add_command(label='Save', command=self.save)
+        file_menu.add_command(label='Save As', command=self.saveas)
+        file_menu.add_separator() 
+        file_menu.add_command(label='Close', command=self.close)
 
-        edit = tk.Menu(menubar, tearoff = 0)
-        menubar.add_cascade(label = 'Edit', menu=edit)
-        edit.add_command(label = 'Matrix Settings', command = self.settings_open)
+        # Save edit_menu to self Eis object so that we can enable/disable Create Shortcut
+        edit_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label='Edit', menu=edit_menu)
+        edit_menu.add_command(label='Matrix Settings', command=self.settings_open)
 
-        self.window.config(menu = menubar) 
+        self.window.config(menu=menubar) 
 
     def build_notes(self, master, top_grow):
         """Build tkinter left column of main window. Used only during __init__."""
@@ -292,6 +296,7 @@ class Eisenhower:
             main(self.root, file_location=file_location)
             return
         self.file_location = file_location
+        self.set_location_variable()
 
         # JSON parses file
         with open(file_location, "r") as file:
@@ -364,6 +369,9 @@ class Eisenhower:
             # Otherwise, CTRL+S binding could unfocus the cursor from a text box
             self.focus()
         
+    def set_location_variable(self):
+        self.location_variable.set('File: ' + self.file_location if self.file_location!='' else ' ')
+
     def settings_open(self):
         if self.settings_window is None or self.settings_window.is_closed():
             self.settings_window = SettingsWindow(self, self.settings)
