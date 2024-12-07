@@ -80,16 +80,21 @@ class Eisenhower:
         # Make sure self.window is erased on window destroy
         self.window.protocol("WM_DELETE_WINDOW", self.close)
 
-        # Bind CTRL+S
+        # Bind CTRL+S and CTRL+W
         def key_press(event):
             key = event.char
-            if len(key) > 0 and ord(key) == 19:
-                self.save()
-            else:
-                self.status_unsaved()
+            if len(key) > 0:
+                if ord(key) == 19:
+                    # CTRL+S
+                    self.save()
+                if ord(key) == 23:
+                    # CTRL+W
+                    self.close()
         self.window.bind('<KeyPress>', key_press)
 
         self.settings_repaint()
+
+        self.window.focus()
 
     def build_center(self, master):
         """Build tkinter central column of main window. Used only during __init__."""
@@ -186,7 +191,7 @@ class Eisenhower:
     
     def build_scrolledtext(self, master, **kwargs):
         frame = tk.Frame(master)
-        field = tk.Text(frame, kwargs, wrap="none")
+        field = tk.Text(frame, kwargs, wrap="none", undo=True, autoseparators=True, maxundo=-1)
         field_v = tk.Scrollbar(frame, orient="vertical", command=field.yview)
         field_h = tk.Scrollbar(frame, orient="horizontal", command=field.xview)
         field.grid(row=0, column=0, sticky="NSEW")
@@ -196,15 +201,55 @@ class Eisenhower:
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
 
+        # Set matrix as unsaved when field is modified
+        def unsaved(event):
+            self.status_unsaved()
+        field.bind('<Key>', unsaved)
+
         return (frame, field)
 
     def close(self):
+        # Confirm unsaved changes
+        if not self.saved:
+            # self.confirm_unsaved will re-call close as needed
+            self.confirm_unsaved()
+            return
+
+        # Cleanup
         self.settings_close()
         self.window.destroy()
         open_instances.remove(self)
 
+        # Exit
         if len(open_instances) == 0:
             self.root.destroy()
+
+    def confirm_unsaved(self):
+            window = tk.Toplevel()
+            window.title('Save changes?')
+            message = tk.Label(window, text='The current matrix is unsaved. Save changes before closing?')
+
+            button_frame = tk.Frame(window)
+            def fn_save():
+                self.save()
+                # Use clicks to save but cancels Save As interface. Don't close
+                if self.saved:
+                    self.close()
+            ttk.Button(button_frame, text='Save', command=fn_save).grid(row=0, column=0)
+            def fn_nosave():
+                self.saved = True
+                self.close()
+            ttk.Button(button_frame, text="Don't Save", command=fn_nosave).grid(row=0, column=1)
+            def fn_cancel(event=None):
+                window.destroy()
+            ttk.Button(button_frame, text='Cancel', command=fn_cancel).grid(row=0, column=2)
+
+            message.grid(row=0, column=0, padx=(10, 40), pady=10, sticky="W")
+            button_frame.grid(row=1, column=0, padx=(40, 10), pady=(0, 10), sticky="E")
+
+            window.bind('<FocusOut>', fn_cancel)
+
+            window.focus()
 
     def focus(self):
         self.window.focus_force()
@@ -274,7 +319,9 @@ class Eisenhower:
     def save(self):
         # Open dialog if not yet saved
         if self.file_location == "":
+            # self.saveas will always recall self.save if a file is chosen
             self.saveas()
+            return
         
         # Convert to JSON
         data = {
@@ -311,6 +358,11 @@ class Eisenhower:
         if file_location is not None and file_location != "":
             self.file_location = file_location
             self.save()
+            
+            # Save dialog complete
+            # Only refocus window if saveas dialog had opened.
+            # Otherwise, CTRL+S binding could unfocus the cursor from a text box
+            self.focus()
         
     def settings_open(self):
         if self.settings_window is None or self.settings_window.is_closed():

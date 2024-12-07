@@ -323,3 +323,4 @@ class SettingsWindow:
         """Close window."""
         self.window.destroy()
         self.parent.settings_close()
+        self.parent.focus()
