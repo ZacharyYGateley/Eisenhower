@@ -34,6 +34,7 @@ class Settings:
         self.fgn_3 = extract('fgn_3', '#000000')
         self.fgn_4 = extract('fgn_4', '#000000')
         # Universal font size
+        self.font_family = extract('font_family', sty.font_mono())
         self.font_size = int(extract('font_size', 12)) or 12
         self.set_font()
         # Side note headers
@@ -41,7 +42,7 @@ class Settings:
         self.notes_2 = extract('notes_2', 'Notes 2')
         self.notes_3 = extract('notes_3', 'Notes 3')
         self.notes_4 = extract('notes_4', 'Notes 4')
-        # Tab width (char width is setting, actual width set by .set_tab_width method)
+        # Tab width in chars and in pixels
         self.tab_chars = int(extract('tab_chars', 2)) or 1
         self.set_tab_width()
         self.title = extract('title', 'Eisenhower To-Do Matrix')
@@ -84,12 +85,18 @@ class Settings:
         if hasattr(self, key):
             setattr(self, key, value)
 
+    def set_font(font):
+        pass
+
     def set_font(self):
-        self.font = font.Font(family=sty.font_mono(), size=self.font_size)
-    
-    def set_tab_width(self, tab_chars=-1):
-        tab_chars = (self.tab_chars if tab_chars < 0 else tab_chars) or 1
-        self.tab_width = self.font.measure(' '*tab_chars)
+        self.font = font.Font(family=self.font_family, size=self.font_size)
+
+    def set_tab_width(self):
+        self.tab_width = self.font.measure(' '*Settings.valid_tab_chars(self.tab_chars))
+
+    def valid_tab_chars(tab_chars):
+        # Tkinter requires non-zero tab-width
+        return int(tab_chars or 2) or 2
 
 class SettingsWindow:
     """Update Eisenhower Matrix Settings.
@@ -113,9 +120,6 @@ class SettingsWindow:
         self.window.iconbitmap('images/feather.ico')
         window.title('Matrix Settings')
         
-        # Number key only callback
-        dcmd = (window.register(self.callback_numeric))
-
         # Color picker image
         img_file_name = "images/color_picker.png"
         current_dir = pathlib.Path(__file__).parent.resolve()
@@ -158,15 +162,48 @@ class SettingsWindow:
 
         # Text settings
         text_settings = tk.Frame(window)
+
+        # Dynamic example
+        # Font captured by closure
+        f = font.Font(window)
+        # Displayed example box
+        self.font_ex = tk.Text(text_settings, bg="#ffffff", fg="#000000", width=10, height=2)
+        self.font_ex.insert(tk.END, "AaBbCc\r\n\tDdEeFf")
+        self.font_ex.configure(state="disabled")
+        
+        def update_font_ex(event=None):
+            # Update floating font
+            fam = self.entry['font_family'].get() or sty.font_mono()
+            siz = int(self.entry['font_size'].get() or 12)
+            f.config(family=fam, size=siz)
+            t = f.measure(' '*Settings.valid_tab_chars(self.entry['tab_chars'].get()))
+            # Update displayed example box
+            self.font_ex.configure(state="normal")
+            self.font_ex.configure(font=f, tabs=t)
+            self.font_ex.configure(state="disabled")
+        
+        # Number key only callback
+        dcmd = (window.register(self.callback_numeric))
+
         tk.Label(text_settings, text='Font Settings', font=sty.font['header3']).grid(row=0, column=0, columnspan=2, pady=(0, 5))
-        tk.Label(text_settings, text='Font Size').grid(row=1, column=0, sticky="E")
-        tk.Label(text_settings, text='Tab Width').grid(row=2, column=0, sticky="E")
+        tk.Label(text_settings, text='Font Family').grid(row=1, column=0, sticky="E")
+        tk.Label(text_settings, text='Font Size').grid(row=2, column=0, sticky="E")
+        tk.Label(text_settings, text='Tab Width').grid(row=3, column=0, sticky="E")
+        self.entry['font_family'] = ttk.Combobox(text_settings, values=self.font_families(), state="readonly")
         self.entry['font_size'] = ttk.Entry(text_settings, validate='all', validatecommand=(dcmd, '%P'), width=3)
         self.entry['tab_chars'] = ttk.Entry(text_settings, validate='all', validatecommand=(dcmd, '%P'), width=2)
-        self.entry['font_size'].grid(row=1, column=1, sticky="W")
-        self.entry['tab_chars'].grid(row=2, column=1, sticky="W")
+        self.entry['font_family'].grid(row=1, column=1, sticky="W")
+        self.entry['font_size'].grid(row=2, column=1, sticky="W")
+        self.entry['tab_chars'].grid(row=3, column=1, sticky="W")
+        self.entry['font_family'].set(settings.get('font_family'))
         self.entry['font_size'].insert(0, settings.get('font_size'))
         self.entry['tab_chars'].insert(0, settings.get('tab_chars'))
+        self.font_ex.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+
+        self.entry['font_family'].bind('<<ComboboxSelected>>', update_font_ex)
+        self.entry['font_size'].bind('<KeyRelease>', update_font_ex)
+        self.entry['tab_chars'].bind('<KeyRelease>', update_font_ex)
+        update_font_ex()
 
 
         # Custom note colors
@@ -282,6 +319,12 @@ class SettingsWindow:
 
         return (color_1, color_2, color_3, color_4)
 
+    def callback_numeric(self, key):
+        if str.isdigit(key) or key == "":
+            return True
+        else:
+            return False
+
     def color_pick(self, field, sample):
         """Select color from color picker."""
         color_code = cc.askcolor(title="Choose color", color=field.get())
@@ -331,15 +374,12 @@ class SettingsWindow:
         """Forces window focus. Used when attempt to open setting when settings already open."""
         self.window.focus_force()
 
+    def font_families(self):
+        return list(font.families())
+
     def is_closed(self):
         """Check if window has been destroyed."""
         return self.window is None
-
-    def callback_numeric(self, key):
-        if str.isdigit(key) or key == "":
-            return True
-        else:
-            return False
 
     def save(self):
         """Update Settings object and pass it to parent. Close window."""
@@ -359,13 +399,14 @@ class SettingsWindow:
         self.settings.set('fgn_2', self.entry['fgn_2'].get())
         self.settings.set('fgn_3', self.entry['fgn_3'].get())
         self.settings.set('fgn_4', self.entry['fgn_4'].get())
+        self.settings.set('font_family', self.entry['font_family'].get())
         self.settings.set('font_size', int(self.entry['font_size'].get()) or 12)
         self.settings.set_font()
         self.settings.set('notes_1', self.entry['notes_1'].get())
         self.settings.set('notes_2', self.entry['notes_2'].get())
         self.settings.set('notes_3', self.entry['notes_3'].get())
         self.settings.set('notes_4', self.entry['notes_4'].get())
-        self.settings.set('tab_chars', int(self.entry['tab_chars'].get()))
+        self.settings.set('tab_chars', Settings.valid_tab_chars(self.entry['tab_chars'].get()))
         self.settings.set_tab_width()
         self.settings.set('title', self.entry['title'].get())
         self.parent.settings_set(self.settings)
