@@ -7,14 +7,15 @@ font['header2'] = (font['family'], 16)
 font['header3'] = (font['family'], 12)
 font['mono'] = ""
 def font_mono():
+    fam = list(ft.families())
     if font['mono'] == "":
-        if 'Courier' in ft.families():
+        if 'Courier' in fam:
             font['mono'] = 'Courier'
-        elif 'courier' in ft.families(): 
+        elif 'courier' in fam: 
             font['mono'] = 'courier'
-        elif 'Monaco' in ft.families():
+        elif 'Monaco' in fam:
             font['mono'] = 'Monaco'
-        elif 'Monospace' in ft.families():
+        elif 'Monospace' in fam:
             font['mono'] = 'Monospace'
     return font['mono']
 
